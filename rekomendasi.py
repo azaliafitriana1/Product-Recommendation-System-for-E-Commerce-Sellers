@@ -12,13 +12,13 @@
 #     /* 1. Import Font */
 #     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-#     /* 2. Custom Font (REVISI: Menghapus [class*="st-"] agar icon tidak error) */
+#     /* 2. Custom Font */
+#     /* REVISI PENTING: Menghapus 'div' dan 'span' dari selector agar IKON Streamlit tidak rusak/kotak-kotak */
 #     html, body, .stApp {
 #         font-family: 'Poppins', sans-serif !important;
 #     }
     
-#     /* Target elemen teks spesifik saja, jangan semua class st- */
-#     h1, h2, h3, h4, h5, h6, p, div, span, label, button, input, textarea, select {
+#     h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select, .stMarkdown {
 #         font-family: 'Poppins', sans-serif !important;
 #     }
 
@@ -33,13 +33,11 @@
 #         color: white !important;
 #     }
     
-#     /* Teks Sidebar (REVISI: Lebih spesifik agar tidak menimpa ikon svg/tombol) */
+#     /* Teks Sidebar */
 #     section[data-testid="stSidebar"] h1, 
 #     section[data-testid="stSidebar"] h2, 
 #     section[data-testid="stSidebar"] h3, 
 #     section[data-testid="stSidebar"] p, 
-#     section[data-testid="stSidebar"] span, 
-#     section[data-testid="stSidebar"] div, 
 #     section[data-testid="stSidebar"] label {
 #         color: #e8f5e9 !important; 
 #     }
@@ -143,7 +141,6 @@
 #         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 #         font-family: 'Poppins', sans-serif !important;
 #     }
-#     /* HAPUS selector global button * color white, karena bisa menimpa elemen lain */
 #     div.stButton > button:hover {
 #         background-color: #2E7D32 !important;
 #         color: white !important; 
@@ -166,6 +163,7 @@
 #     }
 # </style>
 # """, unsafe_allow_html=True)
+
 # # --- FUNGSI RENDER HTML TABLE  ---
 # def render_custom_table(df):
 #     df = df.reset_index(drop=True)
@@ -208,6 +206,8 @@
 #         return orders, order_products_prior_merged, products, departments
 
 #     except Exception as e:
+#         # Menampilkan error spesifik untuk debugging
+#         st.error(f"Error Loading Data: {e}")
 #         return None, None, None, None
 
 # orders, order_products_prior, products, departments = load_data()
@@ -398,20 +398,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 st.set_page_config(layout="wide", page_title="Product Recommendation")
 
-# --- CSS STYLING DIPERBAIKI ---
+# --- CSS STYLING DIPERBAIKI (FINAL) ---
 st.markdown("""
 <style>
     /* 1. Import Font */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-    /* 2. Custom Font */
-    /* REVISI PENTING: Menghapus 'div' dan 'span' dari selector agar IKON Streamlit tidak rusak/kotak-kotak */
+    /* 2. Custom Font Global */
     html, body, .stApp {
         font-family: 'Poppins', sans-serif !important;
     }
     
-    /* Target elemen teks spesifik saja. JANGAN masukkan div atau span secara global */
-    h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select, .stMarkdown {
+    h1, h2, h3, h4, h5, h6, p, label, input, textarea, select, .stMarkdown {
         font-family: 'Poppins', sans-serif !important;
     }
 
@@ -431,8 +429,23 @@ st.markdown("""
     section[data-testid="stSidebar"] h2, 
     section[data-testid="stSidebar"] h3, 
     section[data-testid="stSidebar"] p, 
-    section[data-testid="stSidebar"] label {
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] span,
+    section[data-testid="stSidebar"] div {
         color: #e8f5e9 !important; 
+    }
+
+    /* --- REVISI WARNA ICON SIDEBAR (ARROW/CLOSE) --- */
+    /* Mengubah warna 'fill' SVG menjadi putih untuk semua icon di sidebar */
+    section[data-testid="stSidebar"] svg,
+    section[data-testid="stSidebar"] svg path {
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+    }
+    
+    /* Tombol Close Sidebar (X) di HP/Layar kecil */
+    button[kind="header"] {
+        color: #ffffff !important;
     }
 
     /* 5. Container Style */
@@ -451,14 +464,6 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(67, 160, 71, 0.2) !important;
         background-color: #ffffff !important;
     }
-    div[data-baseweb="select"] > div {
-        background-color: #f8f9fa !important;
-        border-color: #e0e0e0 !important;
-    }
-    div[data-baseweb="select"] > div:focus-within {
-        border-color: #43A047 !important;
-        box-shadow: 0 0 0 2px rgba(67, 160, 71, 0.2) !important;
-    }
 
     /* 7. Table Style */
     .custom-table {
@@ -471,33 +476,27 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         border: 1px solid #e0e0e0;
     }
-    
     .custom-table thead tr {
         background-color: #1B5E20 !important; 
         color: #ffffff !important; 
         text-align: left !important;
     }
-    
     .custom-table th, .custom-table td {
         padding: 12px 15px;
         border-bottom: 1px solid #f0f0f0;
     }
-    
     .custom-table tbody tr {
         border-bottom: 1px solid #dddddd;
         background-color: #ffffff;
         color: #333333; 
     }
-    
     .custom-table tbody tr:nth-of-type(even) {
         background-color: #f9f9f9; 
     }
-    
     .custom-table tbody tr:hover {
         background-color: #e8f5e9; 
         cursor: default;
     }
-    
     .custom-table tbody th, .custom-table thead th:first-child, .custom-table tbody td:first-child {
         display: none;
     }
@@ -522,25 +521,26 @@ st.markdown("""
         box-shadow: 0 -5px 10px rgba(0,0,0,0.02);
     }
 
-    /* 9. BUTTON STYLING */
-    div.stButton > button {
-        background-color: #1B5E20;
-        color: white !important;
+    /* --- REVISI WARNA TOMBOL --- */
+    /* Target tombol DAN elemen p di dalamnya agar teks benar-benar putih */
+    div.stButton > button, 
+    div.stButton > button p {
+        background-color: #1B5E20 !important;
+        color: #ffffff !important; /* Paksa teks putih */
         border: none;
         border-radius: 8px;
-        padding: 0.5rem 1.2rem;
         font-weight: 500;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         font-family: 'Poppins', sans-serif !important;
     }
+    
+    /* Hover State */
     div.stButton > button:hover {
         background-color: #2E7D32 !important;
-        color: white !important; 
+        color: #ffffff !important; 
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-    
+
     /* 10. TYPOGRAPHY */
     h1 { color: #1B5E20; font-weight: 700; }
     h2 { color: #2E7D32; font-weight: 600; font-size: 1.5rem; }
@@ -599,7 +599,6 @@ def load_data():
         return orders, order_products_prior_merged, products, departments
 
     except Exception as e:
-        # Menampilkan error spesifik untuk debugging
         st.error(f"Error Loading Data: {e}")
         return None, None, None, None
 
@@ -614,7 +613,7 @@ def get_competition_level(order_count):
 def top_products_by_department(department_name, data, top_n=10):
     dept_products = data[data['department'] == department_name]
     top_products = dept_products['product_name'].value_counts().reset_index()
-    top_products.columns = ['Nama Produk', 'Jumlah Order'] # Rename biar bagus di tabel
+    top_products.columns = ['Nama Produk', 'Jumlah Order'] 
     top_products['Tingkat Persaingan'] = top_products['Jumlah Order'].apply(get_competition_level)
     return top_products.head(top_n)
 
@@ -639,7 +638,7 @@ def recommend_similar_products(product_name, products_df, top_n=10):
     result_df = products_df.iloc[sim_indices][['product_name', 'aisle', 'department']].copy()
     result_df.columns = ['Nama Produk', 'Lorong (Aisle)', 'Departemen']
     result_df['Similarity Score'] = cosine_sim[sim_indices]
-    result_df['Similarity Score'] = result_df['Similarity Score'].apply(lambda x: f"{x:.2f}") # Format angka
+    result_df['Similarity Score'] = result_df['Similarity Score'].apply(lambda x: f"{x:.2f}") 
     return result_df.reset_index(drop=True)
 
 def recommend_for_diversification(seller_owned_products, all_orders, products_df, num_recommendations=10, top_n_per_dept=3):
